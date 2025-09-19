@@ -16,6 +16,7 @@ async def print_chat_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         print("Update did not contain a message.")
 
-app = ApplicationBuilder().token("7768585506:AAFLbbmcIu8Z2JXZ5dzoH1QuVvEeRJBBK5A").build()
+app = ApplicationBuilder().token(#TOKEN).build()
 app.add_handler(MessageHandler(filters.ALL, print_chat_id))
 app.run_polling()
+
