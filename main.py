@@ -14,13 +14,11 @@ import time
 from datetime import datetime, timedelta
 import ta
 
-from alpha_vantage.foreignexchange import ForeignExchange
 
 #telegram codes
-TOKEN = "7768585506:AAFLbbmcIu8Z2JXZ5dzoH1QuVvEeRJBBK5A"
-CHAT_ID = "-1002860917463"
+TOKEN = #TELEGRAM TOKEN HERE
+CHAT_ID = #TELEGRAM ID HERE
 
-alpha_api = '53T6A0Q1Y16KEWDL'
 
 
 #mt5 details
@@ -31,42 +29,6 @@ interval = int(input("Enter check interval in minutes (e.g., 1, 5, 15): "))
 
 ALGO_TRADE = False
 
-
-def method_1(df, oversold=20, tp_atr_mult=3, sl_atr_mult=1):
-    #
-    df['%K'] = ta.momentum.stoch(df['High'], df['Low'], df['Close'], window=14, smooth_window=3)
-    df['%D'] = ta.momentum.stoch_signal(df['High'], df['Low'], df['Close'], window=14, smooth_window=3)
-    df['ATR'] = ta.volatility.average_true_range(df['High'], df['Low'], df['Close'], window=14)
-
-    if len(df) < 2:
-        return {'signal': 'none', 'tp': None, 'sl': None}
-
-    k_last_2 = df['%K'].iloc[-2:]
-    d_last_2 = df['%D'].iloc[-2:]
-    
-    # Detect %K crossing above %D on last candle
-    crossover = (k_last_2.iloc[0] < d_last_2.iloc[0]) and (k_last_2.iloc[1] > d_last_2.iloc[1])
-    
-    # Check %K is below oversold on last candle
-    k_oversold = k_last_2.iloc[1] < oversold
-    
-    if crossover and k_oversold:
-        entry_price = df['close'].iloc[-1]
-        atr_value = df['ATR'].iloc[-1]
-        take_profit = entry_price + tp_atr_mult * atr_value
-        stop_loss = entry_price - sl_atr_mult * atr_value
-        
-        return {
-            'signal': 'long',
-            'tp': take_profit,
-            'sl': stop_loss
-        }
-    else:
-        return {
-            'signal': 'none',
-            'tp': None,
-            'sl': None
-        }
 
 def get(symbol, range, timeframe):
     mt5.initialize()
@@ -82,27 +44,6 @@ def get(symbol, range, timeframe):
     rates.rename(columns={'close':'Close', 'open':'Open','high':'High','low':'Low'}, inplace=True)
 
     return rates
-
-def get_2(pair, interval, api_key):
-    fx = ForeignExchange(key=api_key, output_format='pandas')
-
-    from_currency = pair[:3]
-    to_currency = pair[3:]
-
-    if interval == 'daily':
-        data, _ = fx.get_currency_exchange_daily(from_symbol=from_currency, to_symbol=to_currency, outputsize='compact')
-    else:
-        data, _ = fx.get_currency_exchange_intraday(from_symbol=from_currency, to_symbol=to_currency, interval=interval, outputsize='compact')
-
-    # Rename columns to lowercase for convenience
-    data.columns = [col.split(' ')[1].lower() for col in data.columns]
-
-    # Sort data by datetime ascending
-    data = data.sort_index()
-
-    return data
-
-
 
 def open_trade(symbol, sl_price, tp_price, action):
     mt5.initialize()
@@ -241,8 +182,14 @@ def delay_until(hour,minute = 0, second = 0, year=None, month=None, day=None):
 
 async def check_condition_and_notify():
     for ticker in tickers:
-        df = get_2(ticker, interval='5min', api_key=alpha_api)
-        trade_data = method_1(df, oversold=20, tp_atr_mult=2, sl_atr_mult=1)
+        df = get(ticker, 1000, '5m')
+        trade_data = #YOUR METHOD HERE
+        '''
+        output method result in the form:
+        data = {'action':'long'/'short',
+                'sl': FLOAT,
+                'tp':FLOAT}
+        '''
 
         if trade_data != None:
             try:
@@ -272,7 +219,7 @@ async def main():
     await asyncio.Event().wait()
 
 if __name__ == '__main__':
-    delay_until(9,59)
+    delay_until(#CHOOSE TIME TO DELAY UNTIL: HOUR, MINUTE)
 
     tickers = ['EURUSD','GBPUSD','USDJPY']
     print(tickers)
@@ -287,3 +234,4 @@ if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
     scheduler = AsyncIOScheduler()
     asyncio.run(main())
+
